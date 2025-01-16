@@ -2,7 +2,7 @@ from LSystem import LSystem
 import turtle, time
 
 class TurtleFuncContainer:
-    def __init__(self, t:turtle.Turtle, segmentSize:int, angle:int) -> None:
+    def __init__(self, t:turtle.Turtle|turtle.RawTurtle, segmentSize:int, angle:int) -> None:
         self.position_stack = []
         self.t = t
         t.speed(0)
@@ -33,13 +33,16 @@ class TurtleFuncContainer:
     def endBranch(self):
         if self.position_stack: RestorePos(self.t, *self.position_stack.pop())
 
-def RestorePos(t:turtle.Turtle, pos:turtle.Vec2D, heading:float):
+    def __repr__(self) -> str:
+        return f"tfc = TurtleFuncContainer(t,{self.size},{self.angle})"
+
+def RestorePos(t:turtle.Turtle|turtle.RawTurtle, pos:turtle.Vec2D, heading:float):
     t.penup()
     t.goto(pos)
     t.setheading(heading) 
     t.pendown()
 
-def RunSystem(lSys:LSystem,t:turtle.Turtle, sleepTime:int, toState:int, suppressAnimation:bool = False, origin:tuple[int:int] = (0,0), originAngle:int = 90):
+def RunSystem(lSys:LSystem,t:turtle.Turtle|turtle.RawTurtle, sleepTime:int, toState:int, suppressAnimation:bool = False, origin:tuple[int:int] = (0,0), originAngle:int = 90):
     turtle_generator = lSys.TurtleGenerator()
     if suppressAnimation: turtle.tracer(0)
     for _ in range(toState):  
@@ -50,10 +53,11 @@ def RunSystem(lSys:LSystem,t:turtle.Turtle, sleepTime:int, toState:int, suppress
         time.sleep(sleepTime)
     turtle.tracer(1)
 
-def DrawSystemState(lSys:LSystem, t:turtle.Turtle, state: int, suppressAnimation:bool = False, origin:tuple[int:int] = (0,0), originAngle:int = 90):
-    if suppressAnimation: turtle.tracer(0)
+def DrawSystemState(lSys:LSystem, t:turtle.Turtle|turtle.RawTurtle, state: int, suppressAnimation:bool = False, origin:tuple[int:int] = (0,0), originAngle:int = 90):
+    if suppressAnimation: t.screen.tracer(0)
     t.clear()
     RestorePos(t, origin, originAngle)
     lSys.DrawSystem(state)
-    turtle.update()
-    turtle.tracer(1)
+    t.screen.update()
+    t.screen.tracer(1)
+

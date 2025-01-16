@@ -8,7 +8,7 @@ class LSystem:
         self.constants = constants
         self.variables = variables
         self.initState = initState
-    
+
     def StateGenerator(self):
         """will yield the next recursion of the system"""
         oldStr = self.initState
@@ -17,8 +17,8 @@ class LSystem:
             newStr = ""
             yield oldStr
             for char in oldStr:
-                # if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
-                if char not in self.turtleRules.keys(): continue
+                if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
+                # if char not in self.turtleRules.keys(): continue
                 if char in self.constants:
                     newStr += char
                     continue
@@ -43,8 +43,8 @@ class LSystem:
         for _ in range(n):
             newStr = ""
             for char in oldStr:
-                # if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
-                if char not in self.rules.keys(): continue
+                if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
+                # if char not in self.rules.keys(): continue
                 if char in self.constants:
                     newStr += char
                     continue
@@ -57,3 +57,5 @@ class LSystem:
             # if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
             if char not in self.turtleRules.keys(): continue
             self.turtleRules[char]()
+
+    def __repr__(self):return f" system = LSystem(\n{self.rules},\n{self.constants},\n{self.variables},\n'{self.initState}',\n{"{" + ", ".join(f"'{key}': tfc.{func.__name__}" for key, func in self.turtleRules.items()) + "}"}\n)\n"

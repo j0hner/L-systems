@@ -1,10 +1,13 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+import tkinter
+import tkinter.scrolledtext
+from tracemalloc import start
 from turtle import RawTurtle, ScrolledCanvas
 
 from mecha import rule
 from LSystem import LSystem, FunctionType
-from TurtleFuncContainer import TurtleFuncContainer as TFC
+from TurtleFuncContainer import TurtleFuncContainer as TFC, DrawSystemState
 import turtle
 
 root = tk.Tk()
@@ -24,16 +27,15 @@ canvas.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")  # Use grid for ca
 
 # Create a TurtleScreen using the canvas
 screen = turtle.TurtleScreen(canvas)
-# screen.bgcolor("black")
 
-t = RawTurtle(canvas)
+t = RawTurtle(screen)
 t.seth(90)
 
-tfc = TFC(t,10,45)
+tfc = TFC(t,0,0)
 
 # Create a frame for the UI controls
 ui_frame = tk.Frame(root, width=300, padx=10, pady=10, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
-ui_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")  # Use grid for ui_frame
+ui_frame.grid(row=0, column=1, sticky="nsew")  # Use grid for ui_frame
 
 def add_rule():
     left_rule = left_entry.get()
@@ -75,7 +77,6 @@ def add_behavior():
             case "right": func = tfc.right
         
         behavior[left_rule] = func
-        print(behavior)
 def delete_behavior():
     try:
         selected_rule_index = behavior_listbox.curselection()
@@ -89,20 +90,86 @@ def clear_turtle():
     if drawing: return
     t.clear()  # Clear the drawing
     t.penup()  # Lift the pen so it doesn't draw while moving
-    t.goto(0, 0)  # Move the turtle to the origin (0, 0)
+    t.goto(0, -300)  # Move the turtle to the origin (0, 0)
     t.seth(90)
     t.pendown()  # Put the pen back down to continue drawing when needed
-def draw_turtle():
+def error(message:str):
+    messagebox.showerror("Error", message)
+def draw():
     global drawing
     if drawing: return
-    clear_turtle()
-    drawing = True
-    t.circle(10)
-    drawing = False
+    if not start_entry.get(): error("the start field must contain a value") ;  return
+    if not depth_entry.get(): error("the depth field must contain a value") ; return
+    if not angle_entry.get(): error("the angle field must contain a value") ; return
+    if not distance_entry.get(): error("the distance field must contain a value") ; return
+    if not start_entry.get() in rules.keys(): error("there must be a rule describing behavior of the strat state") ; return
+    if not rules: error("there must be at least one rule") ;  return
 
-def reset():
+    variables = []
+    constants = ["[","]","+","-"]
+    for key in rules.keys():
+        if key not in variables: variables.append(key)
+        for char in rules.get(key):
+            if char not in variables and char.isalpha(): variables.append(char)
+
+    lSys = LSystem(
+        rules,
+        constants,
+        variables,
+        start_entry.get(),
+        behavior
+    )
+
+    tfc.angle = int(angle_entry.get())
+    tfc.size = int(distance_entry.get())
+
+    DrawSystemState(lSys, t, int(depth_entry.get()), not animate.get(), (0,-300))
+
+    drawing = False
+def export():
+    if not start_entry.get(): error("the start field must contain a value") ;  return
+    if not depth_entry.get(): error("the depth field must contain a value") ; return
+    if not angle_entry.get(): error("the angle field must contain a value") ; return
+    if not distance_entry.get(): error("the distance field must contain a value") ; return
+    if not start_entry.get() in rules.keys(): error("there must be a rule describing behavior of the strat state") ; return
+    if not rules: error("there must be at least one rule") ;  return
+
+    variables = []
+    constants = ["[","]","+","-"]
+    for key in rules.keys():
+        if key not in variables: variables.append(key)
+        for char in rules.get(key):
+            if char not in variables and char.isalpha(): variables.append(char)
+
+    lSys = LSystem(
+        rules,
+        constants,
+        variables,
+        start_entry.get(),
+        behavior
+    )
+
+    tfc.angle = int(angle_entry.get())
+    tfc.size = int(distance_entry.get())
+
+    window = tk.Toplevel()
+    window.title("Export")
+    
+    # Add a scrolled text widget
+    text_area = tkinter.scrolledtext.ScrolledText(window, wrap=tk.WORD, width=80, height=20)
+    text_area.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+    text_area.insert(tk.END, f"{repr(tfc)}\n{repr(lSys)}")
+    text_area.config(state=tk.DISABLED)  # Make the text read-only
+
+    # Add a close button
+    close_button = tk.Button(window, text="Close", command=window.destroy)
+    close_button.pack(pady=10)
+def reset(ask:bool = True):
     global rules, behavior, drawing
     
+    if ask: 
+        if not messagebox.askokcancel("Reset", "Are you sure? The default values will be restored."): return
+
     angle_entry.set(45)
     distance_entry.set(10)
     depth_entry.set(5)
@@ -112,14 +179,28 @@ def reset():
     
     drawing = False
     clear_turtle()
-    rules_listbox.delete(0, tk.END)
+    t.reset()
+    rules_listbox.delete(0, tk.END)                                                                                                                 
     rules = {}
     
+    behavior_listbox.delete(0, tk.END)
+    rules_listbox.delete(0, tk.END)  
     behavior = {}
-    behavior_items = ["+ → left", "- → right", "[ → start branch", "] → end branch"]
+    behavior_items = ["+ → right", "- → left", "[ → start branch", "] → end branch"]
     for item in behavior_items:
         behavior_listbox.insert(tk.END, item)
-        behavior[item.split(" → ")[0]] = item.split(" → ")[1]
+        
+        match item.split(" → ")[1]:
+            case "no action": return
+            case "forward": func = tfc.fwd
+            case "backward": func = tfc.back
+            case "leaf": func = tfc.leaf
+            case "start branch": func = tfc.startBranch
+            case "end branch": func = tfc.endBranch
+            case "left": func = tfc.left
+            case "right": func = tfc.right
+        
+        behavior[item.split(" → ")[0]] = func
 
 
 
@@ -155,18 +236,29 @@ depth_entry.grid(row=0, column=1, pady=4, padx=10)
 start_subframe = tk.Frame(field_frame, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
 start_subframe.grid(row=4, column=0, padx=6, sticky="w")
 
-start_entry = tk.Entry(start_subframe, width=12)
+start_entry = tk.Entry(start_subframe, width=12, validate="key", validatecommand=(root.register(lambda v: len(v) < 2), "%P"))
 start_entry.grid(row=0, column=1, pady=4, padx=10)
 tk.Label(start_subframe, text="start:", bg="lightgrey", font=("Fira Code", 10)).grid(row=0, column=0)
 
+anim_subframe = tk.Frame(field_frame, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
+anim_subframe.grid(row=5, column=0, padx=6)
+
+animate = tk.BooleanVar()
+anim_entry = tk.Checkbutton(anim_subframe, variable=animate, bg="lightgrey")
+anim_entry.grid(row=0, column=0)
+tk.Label(anim_subframe, text="animate", bg="lightgrey", font=("Fira Code", 10)).grid(row=0, column=1)
+
 button_subframe = tk.Frame(control_frame, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
-button_subframe.grid(row=5, padx=6)
+button_subframe.grid(row=6, padx=6)
 
-clear_button = tk.Button(button_subframe, text="Clear", command=clear_turtle, width=10)
-clear_button.grid(row=0, column=5)
+reset_button = tk.Button(button_subframe, text="Reset", command=reset, width=10)
+reset_button.grid(row=0, column=1, padx=2)
 
-draw_button = tk.Button(button_subframe, text="Draw", command=draw_turtle, width=10)
-draw_button.grid(row=0, column=1, padx=5)
+draw_button = tk.Button(button_subframe, text="Draw", command=draw, width=10)
+draw_button.grid(row=0, column=0, padx=2)
+
+export_button = tk.Button(button_subframe, text="Export", command=export, width=22)
+export_button.grid(row=1, column=0, columnspan=2, pady=4)
 #endregion
 
 #region rules
@@ -178,7 +270,7 @@ tk.Label(rule_frame, text="──────── Rules ───────�
 entry_subframe = tk.Frame(rule_frame, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
 entry_subframe.grid(row=1, column=0, padx=6)
 
-left_entry = tk.Entry(entry_subframe, width=10)
+left_entry = tk.Entry(entry_subframe, width=10, validate="key", validatecommand=(root.register(lambda v: len(v) < 2), "%P"))
 left_entry.grid(row=1, column=0, padx=5)
 tk.Label(entry_subframe, text="→", bg="lightgrey", font=("arial", 14)).grid(row=1, column=1, padx=5)
 right_entry = tk.Entry(entry_subframe, width=10)
@@ -207,7 +299,7 @@ tk.Label(t_rules_frame, text="─── Turtle Behavior ───", bg="lightgre
 input_subframe = tk.Frame(t_rules_frame, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
 input_subframe.grid(row=1)
 
-behavior_entry = tk.Entry(input_subframe, width=10)
+behavior_entry = tk.Entry(input_subframe, width=10, validate="key", validatecommand=(root.register(lambda v: len(v) < 2), "%P"))
 behavior_entry.grid(row=0, column=0)
 
 tk.Label(input_subframe, text="→", bg="lightgrey", font=("arial", 14)).grid(row=0, column=1, padx=5)
@@ -231,5 +323,5 @@ behavior_listbox = tk.Listbox(t_rules_frame, height=10, width=30)
 behavior_listbox.grid(row=3, column=0, columnspan=3, pady=5)
 #endregion
 
-reset()
+reset(False)
 root.mainloop()
