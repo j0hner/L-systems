@@ -8,50 +8,50 @@ class LSystem:
         self.constants = constants
         self.variables = variables
         self.initState = initState
-    def StateGenerator(self, log:bool = False):
+    
+    def StateGenerator(self):
         """will yield the next recursion of the system"""
         oldStr = self.initState
-        newStr = ""
         
         while True:
+            newStr = ""
             yield oldStr
             for char in oldStr:
-                if char not in self.rules.keys() and not char in self.constants and not char in self.variables: raise KeyError(f"there is no rule, constant or variable defining the behavior of '{char}' in this system")
+                if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
                 if char in self.constants:
                     newStr += char
                     continue
                 newStr += self.rules[char]
             oldStr = newStr
-            newStr = ""
     
     def TurtleGenerator(self):
         """will execute the functions specified in turtleRules on the next recursion of the system"""
         stageGenerator = self.StateGenerator()
         instructions = self.initState
         while True:
-            for instruction in instructions:
-                if instruction not in self.turtleRules.keys(): raise KeyError(f"there is no turtle rule defining the behavior of '{instruction}' in this system")
-                self.turtleRules[instruction]()
+            for char in instructions:
+                if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
+                if char not in self.turtleRules.keys(): continue
+                self.turtleRules[char]()
             instructions = next(stageGenerator)
             yield
 
     def GetState(self, n:int):
         oldStr = self.initState
-        newStr = ""
         
         for _ in range(n):
+            newStr = ""
             for char in oldStr:
-                if char not in self.rules.keys() and not char in self.constants and not char in self.variables: raise KeyError(f"there is no rule, constant or variable defining the behavior of '{char}' in this system")
+                if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
                 if char in self.constants:
                     newStr += char
                     continue
                 newStr += self.rules[char]
             oldStr = newStr
-            newStr = ""
-        
         return oldStr
     
     def DrawSystem(self, n:int):
-        for instruction in self.GetState(n):
-            if instruction not in self.turtleRules.keys() and not instruction in self.variables and not instruction in self.variables: raise KeyError(f"there is no rule, constant or variable defining the behavior of '{instruction}' in this system")
-            self.turtleRules[instruction]()
+        for char in self.GetState(n):
+            if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
+            if char not in self.turtleRules.keys(): continue
+            self.turtleRules[char]()
