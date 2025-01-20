@@ -1,0 +1,27 @@
+{
+    "rules": {
+        "G": "GG",
+        "F": "G[+F]-F"
+    },
+    "constants": [
+        "[",
+        "]",
+        "+",
+        "-"
+    ],
+    "variables": [
+        "G",
+        "F"
+    ],
+    "initState": "F",
+    "turtleRules": {
+        "+": "right",
+        "-": "left",
+        "[": "start branch",
+        "]": "end branch",
+        "F": "leaf",
+        "G": "forward"
+    },
+    "angle": 45,
+    "length": 10
+}

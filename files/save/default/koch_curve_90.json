@@ -1,0 +1,24 @@
+{
+    "rules": {
+        "F": "F+F-F-F+F"
+    },
+    "constants": [
+        "[",
+        "]",
+        "+",
+        "-"
+    ],
+    "variables": [
+        "F"
+    ],
+    "initState": "F",
+    "turtleRules": {
+        "+": "right",
+        "-": "left",
+        "[": "start branch",
+        "]": "end branch",
+        "F": "forward"
+    },
+    "angle": 90,
+    "length": 10
+}

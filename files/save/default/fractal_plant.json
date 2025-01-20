@@ -1,0 +1,26 @@
+{
+    "rules": {
+        "X": "F+[[X]-X]-F[-FX]+X",
+        "F": "FF"
+    },
+    "constants": [
+        "[",
+        "]",
+        "+",
+        "-"
+    ],
+    "variables": [
+        "F",
+        "X"
+    ],
+    "initState": "X",
+    "turtleRules": {
+        "F": "forward",
+        "[": "start branch",
+        "]": "end branch",
+        "-": "left",
+        "+": "right"
+    },
+    "angle": 25,
+    "length": 10
+}
