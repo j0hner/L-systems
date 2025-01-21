@@ -92,7 +92,7 @@ def delete_behavior():
 def clear_turtle():
     global drawing
     if drawing: return
-    RestorePos((0,-300), 90)
+    RestorePos(t, (0,-300), 90)
 def draw():
     global drawing
     if drawing: return
