@@ -278,7 +278,7 @@ depth_entry.grid(row=0, column=1, pady=4, padx=10)
 start_subframe = tk.Frame(field_frame, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
 start_subframe.grid(row=4, column=0, padx=6, sticky="w")
 
-start_entry = tk.Entry(start_subframe, width=12, validate="key", validatecommand=(root.register(lambda v: len(v) < 2), "%P"))
+start_entry = tk.Entry(start_subframe, width=12)
 start_entry.grid(row=0, column=1, pady=4, padx=10)
 tk.Label(start_subframe, text="start:", bg="lightgrey", font=("Fira Code", 10)).grid(row=0, column=0)
 anim_subframe = tk.Frame(field_frame, bg="lightgrey", highlightbackground="red", highlightthickness=int(outlineFrames))
