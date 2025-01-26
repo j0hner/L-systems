@@ -5,7 +5,7 @@ import tkinter.scrolledtext
 from turtle import RawTurtle, ScrolledCanvas
 
 import LSystem
-from LSystem import LSystem, RestorePos, can_deserialze
+from LSystem import LSystem, setPos, can_deserialze
 import turtle
 
 drawing = False
@@ -14,6 +14,8 @@ outlineFrames = False
 rules = {}
 behavior = {}
 presets = {}
+
+TRDropdownItems = ["none", "forward","jump forward", "backward","left", "right", "turn around" "leaf", "start branch", "end branch", "start poly", "add point", "end poly"]
 
 #region window setup + scrollbar
 
@@ -92,7 +94,7 @@ def delete_behavior():
 def clear_turtle():
     global drawing
     if drawing: return
-    RestorePos(t, (0,-300), 90)
+    setPos(t, (0,-300), 90)
 def draw():
     global drawing
     if drawing: return
@@ -108,7 +110,7 @@ def reset(ask:bool = True):
 
     drawing = False
     clear_turtle()
-    RestorePos(t, (0,-300), 90)
+    setPos(t, (0,-300), 90)
     rules_listbox.delete(0, tk.END)
     rules = {}
     
@@ -117,7 +119,7 @@ def reset(ask:bool = True):
     preset_listbox.delete(0, tk.END) 
     
     behavior = {}
-    behavior_items = ["+ → right", "- → left", "[ → start branch", "] → end branch"]
+    behavior_items = ["+ → right", "- → left", "[ → start branch", "] → end branch", "| → turn around", "{ → start poly", ". → add point", "} → end poly"]
     for item in behavior_items:
         behavior_listbox.insert(tk.END, item)
         behavior[item.split(" → ")[0]] = item.split(" → ")[1]
@@ -149,14 +151,12 @@ def fields_ok() -> bool:
     if not depth_entry.get(): error("the depth field must contain a value") ; return False
     if not angle_entry.get(): error("the angle field must contain a value") ; return False
     if not distance_entry.get(): error("the distance field must contain a value") ; return False
-    if not start_entry.get() in rules.keys(): error("there must be a rule describing behavior of the strat state") ; return False
-    if not rules: error("there must be at least one rule") ;  return False
     return True
 def system_from_fields():
     
     
     variables = []
-    constants = ["[","]","+","-"]
+    constants = ["[","]","+","-", "{", ".", "}"]
     for key in rules.keys():
         if key not in variables: variables.append(key)
         for char in rules.get(key):
@@ -342,7 +342,7 @@ behavior_entry.grid(row=0, column=0)
 
 tk.Label(input_subframe, text="→", bg="lightgrey", font=("arial", 14)).grid(row=0, column=1, padx=5)
 
-behavior_combobox = ttk.Combobox(input_subframe, state="readonly", width=10, values=["none", "forward", "backward", "leaf", "start branch", "end branch", "left", "right"])
+behavior_combobox = ttk.Combobox(input_subframe, state="readonly", width=10, values=TRDropdownItems)
 behavior_combobox.set("none")
 behavior_combobox.grid(row=0, column=2)
 

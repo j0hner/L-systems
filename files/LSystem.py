@@ -4,6 +4,7 @@ from typing import Any, Generator, Literal, NoReturn, Self
 import turtle, time
 
 position_stack = []
+poly_stack = []
 stopDrawingFlag = False
 
 class LSystem:
@@ -27,7 +28,9 @@ class LSystem:
             newStr = ""
             yield oldStr
             for char in oldStr:
-                if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
+                # if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
+                if char not in self.rules.keys(): continue
+
                 if char in self.constants:
                     newStr += char
                     continue
@@ -51,8 +54,8 @@ class LSystem:
         for _ in range(n):
             newStr = ""
             for char in oldStr:
-                if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
-                # if char not in self.rules.keys(): continue
+                # if not(char in self.constants or char in self.variables): raise KeyError(f"'{char}' is not defined in this system")
+                if char not in self.rules.keys(): continue
                 if char in self.constants:
                     newStr += char
                     continue
@@ -67,7 +70,7 @@ class LSystem:
         
         for _ in range(toState):  
             self.turtle.clear()
-            RestorePos(self.turtle, origin, originAngle)
+            setPos(self.turtle, origin, originAngle)
             next(turtle_generator)
             self.turtle.screen.update()
             time.sleep(sleepTime)
@@ -80,7 +83,7 @@ class LSystem:
         
         self.turtle.clear()
         
-        RestorePos(self.turtle, origin, originAngle)
+        setPos(self.turtle, origin, originAngle)
         
         for char in self.GetState(state):
             if stopDrawingFlag: stopDrawingFlag=False ; return
@@ -143,7 +146,34 @@ class LSystem:
         position_stack.append((self.turtle.pos(), self.turtle.heading()))  
 
     def _end_branch(self) -> None:
-        if position_stack: RestorePos(self.turtle, *position_stack.pop())
+        if position_stack: setPos(self.turtle, *position_stack.pop())
+
+    def _start_poly(self):
+        poly_stack.append([])
+    
+    def _add_point(self):
+        poly_stack[len(poly_stack) - 1].append(self.turtle.pos())
+
+    def _end_poly(self):
+        self.turtle.penup()
+        oldPos = self.turtle.pos()
+        currentPoly = poly_stack.pop()
+
+        for pos in currentPoly:
+            self.turtle.goto(pos)
+            self.turtle.pendown()
+
+        self.turtle.goto(currentPoly[0])
+
+        setPos(self.turtle, oldPos, self.turtle.heading())
+    
+    def _turn_around(self):
+        self.turtle.left(180)
+
+    def _jump_forward(self):
+        self.turtle.penup()
+        self.turtle.forward(self.length)
+        self.turtle.pendown()
 
     def _none() -> None: return
 
@@ -155,7 +185,7 @@ def can_deserialze(t:turtle.Turtle, json_str:str):
             return True
         except: return False    
 
-def RestorePos(t:turtle.Turtle|turtle.RawTurtle, pos:turtle.Vec2D, heading:float):
+def setPos(t:turtle.Turtle|turtle.RawTurtle, pos:turtle.Vec2D, heading:float):
     t.penup()
     t.goto(pos)
     t.setheading(heading) 
