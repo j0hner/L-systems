@@ -50,7 +50,7 @@ Has a list containing all saved presets and 3 buttons:
 
 ----------
 - there are warnings in places where work might be lost (such as reset, load etc.)
-- it is still under development
+- it is still under development _(that's a lie younger me made)_
 
 
 
