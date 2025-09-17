@@ -1,6 +1,7 @@
 L-System tinkerer
 =
 - A fun tkinter gui to mess with l-systems and turtle graphics in.
+- If you don't know what L-systems are, look at the [wiki](https://en.wikipedia.org/wiki/L-system)
 
 Build
 -
